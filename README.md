@@ -1,4 +1,6 @@
-# Neurcontroller code for Dura-Bernal et al. 2016 - Frontiers in Neuroscience
+# Neurcontroller code 
+
+Dura-Bernal et al. 2016 - "Restoring behavior via inverse neurocontroller in a lesioned cortical spiking model driving a virtual arm}" Frontiers in Neuroscience (Neuroprosthetics)"
 
 ## Description
 
