@@ -216,8 +216,7 @@ for irepair in repair_range:
 
 									# Open a pipe to the qsub command.
 									# output, input = popen2('qsub')
-									output, input = popen2(sys_str)
-
+									
 									# # Customize your options here
 									# job_name = outfilestem
 									# walltime = "00:30:00"
@@ -238,11 +237,11 @@ for irepair in repair_range:
 									# # Send job_string to qsub
 									# input.write(job_string)
 									# input.close()
-									# os.system(sys_str)
+									os.system(sys_str)
 
 									# Print your job and the response to the screen
 									# print job_string
-									print output.read()
+									# print output.read()
 
 									time.sleep(0.1)
 									
