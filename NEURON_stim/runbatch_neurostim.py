@@ -91,8 +91,8 @@ def makeRepairStims (filestem, target, param1, param2):
 # Load params 
 paramFile = 'stimdata/gen_86_cand_151'
 with open('%s_params'% (paramFile)) as f:
-        param = pickle.load(f) # read initial params from file
-print params
+	param = pickle.load(f) # read initial params from file
+print param
 
 # Set sim duration (in s)
 simdur = 2
