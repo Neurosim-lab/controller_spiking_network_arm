@@ -1,0 +1,77 @@
+declare("nsmist",new List()) // list of netstims for mist
+declare("nvmist",new List()) // list of netstims for mist
+declare("ncmist",new List()) // list of NetCons from nsmist to cells
+declare("vecTmist",new List()) // list of vectors with mist times for each cell
+declare("vecISImist",new List()) // list of vectors with mist ISIs for each cell
+
+objref xo,mistdatafile, mistTimes, mistTimesCell, mistRates, mistIntervals, mistCells, tvecMist, idvecMist, temp, indices   // Initialize things for mist stimuli
+
+tvecMist= new Vector()
+idvecMist = new Vector()
+
+//** mkNSs() create and locate the Stimulators -- these are NetStims -- NSLOCs since have loc -- used for MiSt
+proc mkMistNSs () { local nmist,ii localobj xo,nc
+  nmist=512
+  for ii=0,nmist-1 {
+      nsmist.append(xo = new NSLOC()) // create the NSs 
+  }
+  
+  for ltr(xo,nsmist,&ii) { // initialize netstims
+	  xo.id=ii
+	  xo.start = -1
+	  xo.interval = 10000
+	  xo.number = 1000000
+	  xo.noise = 0
+	  
+	  ncmist.append(nc=new NetCon(xo, col[0].ce.o(ii))) // create netcon between each netstim and cell in the model
+	  nc.delay=0
+	  nc.weight[mistSynapse]=0.0001
+	  
+	  nc.record(tvecMist, idvecMist, xo.id) // record spikes at netcon
+  }
+}
+
+if (userandommist) {
+	print "Creating mist stimulus..."
+	// Read in stimulus from file
+	strdef mistinputfile
+	mistdatafile = new File()
+	sprint(mistinputfile,"%s-in.txt",filestem)
+	mistdatafile.ropen(mistinputfile) // Open file  for reading
+	if (mistdatafile.isopen()) {
+		mistCells = new Vector()
+		mistTimes = new Vector()
+		mistRates = new Vector()
+		mistIntervals = new Vector()
+		mistTimesCell = new Vector()
+		temp = new Vector()
+		indices = new Vector()
+		mkMistNSs() // make microstimulation vec stims
+		while (!mistdatafile.eof()) { // Read from the data file
+			mistCells.append(mistdatafile.scanvar()) // Read cell
+			mistTimes.append(mistdatafile.scanvar()) // Read time point
+			mistRates.append(mistdatafile.scanvar()) // Read rate
+			}
+		mistdatafile.close() // Close the input file
+		
+		mistRates.add(0.0001) // to avoid division by 0
+		mistRates.pow(-1) // invert to obtain intervals
+		mistRates.mul(1000) //convert to ms
+		
+		for i=0, mistCells.size()-1 {
+			if (indices.contains(mistCells.x[i])==0) { // only do if new cell index
+				indices.append(mistCells.x[i])
+				temp.indvwhere(mistCells,"[]",mistCells.x[i],mistCells.x[i]) // find indices of all entries in file for current cell
+				vecISImist.append(mistRates.ind(temp)) // append the mist ISIs to list
+				vecTmist.append(mistTimes.ind(temp)) // appeend the mist times to list
+				ncmist.o(mistCells.x[i]).weight[mistSynapse] = mistWeight // set netcon weight
+				xo = nsmist.o(mistCells.x[i]) // select netstim object
+				xo.start = mistTimes.ind(temp).x[0] // set start time of netstim
+				print xo.start
+				vecISImist.o(vecISImist.count()-1).play(&xo.interval, vecTmist.o(vecTmist.count()-1)) // play mist vector on netstim
+			}
+		}	
+	}
+}
+
+
