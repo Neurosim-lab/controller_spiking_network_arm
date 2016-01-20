@@ -138,7 +138,7 @@ selectCellPerturbs = [[2,2],[30,9]]
 selectSynPerturbs = [[43,45],[8,34]] 
 
 # save params
-with open('simdata/params', 'w') as f:
+with open('stimdata/params', 'w') as f:
 	pickle.dump([param, wseed_range, inseed_range], f)
 
 # to save LFPs and EMGs"
