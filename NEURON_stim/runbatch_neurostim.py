@@ -89,22 +89,10 @@ def makeRepairStims (filestem, target, param1, param2):
 	print "Repair stimulus file %s copied to %s." % (fileorigin, filedest)
 
 # Load params 
-infilestem=sys.argv[1]
-outfilestem=sys.argv[2]
-if len(sys.argv) > 3:
-	iteration = int(sys.argv[3])
-else:
-	iteration = 0 #default
-
-
-with open('%s_params'% (outfilestem)) as f:
+paramFile = 'stimdata/gen_86_cand_151'
+with open('%s_params'% (paramFile)) as f:
         param = pickle.load(f) # read initial params from file
-print param
-
-# Set up the simulation data directory.
-simdatadir = ('data/%s_mist_%s'%(infilestem,outfilestem[outfilestem.find("gen"):]))
-mdir_str='mkdir %s' % (simdatadir)
-os.system(mdir_str) 
+print params
 
 # Set sim duration (in s)
 simdur = 2
@@ -167,7 +155,7 @@ for irepair in repair_range:
 			iseed = iseedvals[12]
 		elif target == 3:
 			iseed = iseedvals[22]
-		mistparam1 = 'data/14sep16b_mist_iseeds_gen_86_cand_151/target-%d_i-%d_w-120456_plastnq.nqs' % (target,iseed)
+		mistparam1 = 'stimdata/target-%d_i-%d_w-120456_plastnq.nqs' % (target,iseed)
 		for wseed in wseed_range:
 			wseedval = wseedvals
 			# Loop over param1 vals
@@ -187,16 +175,16 @@ for irepair in repair_range:
 									# Loop over imparam1 vals
 									if (param5 > 0 and param6 > 0):# generate microstim
 										if probing == 1: # probing data with single cell stim (filename includes mist details)
-											outfilestem = '%s/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d' % \
-											(simdatadir, target, param1, param2, param3, param4, param5, param6)
+											outfilestem = 'stimdata/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d' % \
+											(target, param1, param2, param3, param4, param5, param6)
 											makeProbingStims(outfilestem, param3,param4,param5,param6) # generate .txt file probing stim
 										elif probing == 2: # probing data with multiple cell stim (filename includes mist details and 'multi')
-											outfilestem = '%s/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d_multi' % \
-											(simdatadir, target, param1, param2, param3, param4, param5, param6)
+											outfilestem = 'stimdata/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d_multi' % \
+											(target, param1, param2, param3, param4, param5, param6)
 											makeMultProbingStims(outfilestem, param3,param4,param5,param6) # generate .txt file probing stim
 										elif probing == 3: # special case: generating multiple test iseeds (no probing or repair)
-											outfilestem = '%s/target-%d_ptype-%d_pperc-%d_iseed-%d_start-%d_dur-%d_rate-%d' % \
-											(simdatadir, target, param1, param2, param3, param4, param5, param6)
+											outfilestem = 'stimdata/target-%d_ptype-%d_pperc-%d_iseed-%d_start-%d_dur-%d_rate-%d' % \
+											(target, param1, param2, param3, param4, param5, param6)
 										elif probing == 0: # repair data (file name says 'repair')
 											if iteration > 0:
 												outfilestem = '%s/target-%d_ptype-%d_pperc-%d_%s_iter-%d_repair' % (simdatadir, target, param1, param2, irepair, iteration)
@@ -207,24 +195,24 @@ for irepair in repair_range:
 									# or copies over specific perturbation file previously selected
 									if param1 == 0:
 										iPerturb = selectCellPerturbs[param2Counter][targetCounter]
-										filename = '%s/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d' % \
-									(simdatadir, target, param1, param2, iPerturb, 0, 0, 0)
+										filename = 'stimdata/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d' % \
+									(target, param1, param2, iPerturb, 0, 0, 0)
 										copyPerturbCellsFile(filename, outfilestem)
 									elif param1 == 1:
 										iPerturb = selectSynPerturbs[param2Counter][targetCounter]
-										filename = '%s/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d' % \
-									(simdatadir, target, param1, param2, iPerturb, 0, 0, 0)
+										filename = 'stimdata/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d' % \
+									(target, param1, param2, iPerturb, 0, 0, 0)
 										copyPerturbSynsFile(filename, outfilestem)
 
 									print filename
 
 									# launch sim
 									if probing == 3: 
-										sys_str = './runsim_stim %s %.2f %.3f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %d %d %d %d %s' % \
+										sys_str = './runsim_neurostim %s %.2f %.3f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %d %d %d %d %s' % \
 										(outfilestem, param[0], param[1], param[2], param[3], param[4], param[5], param[6], param[7], param[8], param[9], param[10], param[11], param[12], param[13], param[14], param[15], \
 										 param[16], param[17], param[18], param[19], param[20], target, param3, wseedval, calcErr, mistparam1)
 									else:
-										sys_str = './runsim_stim %s %.2f %.3f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %d %d %d %d %s' % \
+										sys_str = './runsim_neurostim %s %.2f %.3f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %d %d %d %d %s' % \
 										(outfilestem, param[0], param[1], param[2], param[3], param[4], param[5], param[6], param[7], param[8], param[9], param[10], param[11], param[12], param[13], param[14], param[15], \
 										 param[16], param[17], param[18], param[19], param[20], target, iseed, wseedval, calcErr, mistparam1)
 										

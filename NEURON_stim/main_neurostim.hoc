@@ -423,7 +423,7 @@ proc stim() {local i
 	// filestem passed from runsim20params_mist and makestims.py called from rubatchpbs_mist_20params.py
 
 	// Load data file, add to stim variable, and run setshock()
-	load_file("stim.hoc") // load code to set netstims and netcons based on textfile parameter
+	load_file("neurostim.hoc") // load code to set netstims and netcons based on textfile parameter
 	
 }
 
