@@ -215,7 +215,8 @@ for irepair in repair_range:
 									print sys_str
 
 									# Open a pipe to the qsub command.
-									output, input = popen2('qsub')
+									# output, input = popen2('qsub')
+									output, input = popen2(sys_str)
 
 									# # Customize your options here
 									# job_name = outfilestem
@@ -236,8 +237,7 @@ for irepair in repair_range:
 
 									# # Send job_string to qsub
 									# input.write(job_string)
-									input.write(sys_str)
-									input.close()
+									# input.close()
 									# os.system(sys_str)
 
 									# Print your job and the response to the screen
