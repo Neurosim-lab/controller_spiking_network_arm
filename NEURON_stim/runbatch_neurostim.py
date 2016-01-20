@@ -217,30 +217,31 @@ for irepair in repair_range:
 									# Open a pipe to the qsub command.
 									output, input = popen2('qsub')
 
-									# Customize your options here
-									job_name = outfilestem
-									walltime = "00:30:00"
-									processors = "nodes=1:ppn=2"
-									command = sys_str
+									# # Customize your options here
+									# job_name = outfilestem
+									# walltime = "00:30:00"
+									# processors = "nodes=1:ppn=2"
+									# command = sys_str
 
-									job_string = """#!/bin/bash
-									#PBS -N %s
-									#PBS -l walltime=%s
-									#PBS -q longerq
-									#PBS -l %s
-									#PBS -o %s.out
-									#PBS -e %s.err
-									cd $PBS_O_WORKDIR
-									echo $PBS_O_WORKDIR
-									%s""" % (job_name, walltime, processors, job_name, job_name, command)
+									# job_string = """#!/bin/bash
+									# #PBS -N %s
+									# #PBS -l walltime=%s
+									# #PBS -q longerq
+									# #PBS -l %s
+									# #PBS -o %s.out
+									# #PBS -e %s.err
+									# cd $PBS_O_WORKDIR
+									# echo $PBS_O_WORKDIR
+									# %s""" % (job_name, walltime, processors, job_name, job_name, command)
 
-									# Send job_string to qsub
-									input.write(job_string)
+									# # Send job_string to qsub
+									# input.write(job_string)
+									input.write(sys_str)
 									input.close()
-									#os.system(sys_str)
+									# os.system(sys_str)
 
 									# Print your job and the response to the screen
-									print job_string
+									# print job_string
 									print output.read()
 
 									time.sleep(0.1)

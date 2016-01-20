@@ -1,0 +1,56 @@
+#!/bin/bash
+# This program runs the Ubermodel in batch mode.
+#
+# Instructions:
+#   runsim [filename] [duration] [simsize] etc. 
+# 
+# Example: runsim foo 120 8
+#   which runs a 4000-cell sim for 120 s and saves to foo-spk.txt etc.
+#
+# Version: 2012jun19
+
+tic=`date +%s` # Get current time
+cd `dirname $0` # Make sure we're n the right directory
+
+# Handle input arguments
+   filestem=${1}; if [ -z $filestem  ]; then filestem="stimdata/testsim"; fi # Name of file stem
+
+    param1=${2}; if [ -z $param1 ]; then param1=0; 		fi 	# parameter 1
+	param2=${3}; if [ -z $param2  ]; then param2=0; 		fi # parameter 2
+    param3=${4}; if [ -z $param3 ]; then param3=0; 		fi 	# parameter 3
+	param4=${5}; if [ -z $param4  ]; then param4=0; 		fi # parameter 4
+	param5=${6}; if [ -z $param5 ]; then param5=0; 		fi 	# parameter 5
+    param6=${7}; if [ -z $param6 ]; then param6=0; 		fi 	# parameter 6
+	param7=${8}; if [ -z $param7  ]; then param7=0; 		fi # parameter 7
+    param8=${9}; if [ -z $param8 ]; then param8=0; 		fi 	# parameter 8
+	param9=${10}; if [ -z $param9  ]; then param9=0; 		fi # parameter 9
+	param10=${11}; if [ -z $param10 ]; then param10=0; 		fi 	# parameter 10
+	param11=${12}; if [ -z $param11 ]; then param11=0; 		fi 	# parameter 11
+	param12=${13}; if [ -z $param12  ]; then param12=0; 		fi # parameter 12
+    param13=${14}; if [ -z $param13 ]; then param13=0; 		fi 	# parameter 13
+	param14=${15}; if [ -z $param14  ]; then param14=0; 		fi # parameter 14
+	param15=${16}; if [ -z $param15 ]; then param15=0; 		fi 	# parameter 15
+	param16=${17}; if [ -z $param16 ]; then param16=0; 		fi 	# parameter 16
+	param17=${18}; if [ -z $param17  ]; then param17=0; 		fi # parameter 17
+    param18=${19}; if [ -z $param18 ]; then param18=0; 		fi 	# parameter 18
+	param19=${20}; if [ -z $param19  ]; then param19=0; 		fi # parameter 19
+	param20=${21}; if [ -z $param20 ]; then param20=0; 		fi 	# parameter 20
+	param21=${22}; if [ -z $param21 ]; then param21=0; 		fi 	# parameter 21
+
+	target=${23}; if [ -z $target ]; then target=0; 	fi # target
+	inputseed=${24}; if [ -z $inputseed ]; then inputseed=1; 	fi # Input seed
+	wireseed=${25}; if [ -z $wireseed  ]; then wireseed=1; 		fi # Wiring seed
+	calcErr=${26}; if [ -z $calcErr  ]; then calcErr=0; 		fi # calcerrseed
+	mistparam1=${27}; if [ -z $mistparam1 ]; then mistparam1=""; 		fi # mistparam1
+
+# Find NEURON
+NEURON=nrniv
+
+# Run the simulation
+echo $NEURON -c "inputseed=$inputseed" -c "dvseed=$wireseed" -c "strdef filestem" -c "filestem=\"$filestem\"" -c "param1 = $param1" -c "param2 = $param2" -c "param3 = $param3" -c "param4 = $param4" -c "param5 = $param5" -c "param6 = $param6" -c "param7 = $param7" -c "param8 = $param8" -c "param9 = $param9" -c "param10 = $param10" -c "param11 = $param11" -c "param12 = $param12" -c "param13 = $param13" -c "param14 = $param14" -c "param15 = $param15" -c "param16 = $param16" -c "param17 = $param17" -c "param18 = $param18" -c "param19 = $param19" -c "param20 = $param20" -c "param21 = $param21" -c "ptarget = $target" -c "calcErr = $calcErr" -c "strdef mistparam1" -c "mistparam1=\"$mistparam1\"" main_stim.hoc #>> $codefile # Set and run
+$NEURON -c "inputseed=$inputseed" -c "dvseed=$wireseed" -c "strdef filestem" -c "filestem=\"$filestem\"" -c "param1 = $param1" -c "param2 = $param2" -c "param3 = $param3" -c "param4 = $param4" -c "param5 = $param5" -c "param6 = $param6" -c "param7 = $param7" -c "param8 = $param8" -c "param9 = $param9" -c "param10 = $param10" -c "param11 = $param11" -c "param12 = $param12" -c "param13 = $param13" -c "param14 = $param14" -c "param15 = $param15" -c "param16 = $param16" -c "param17 = $param17" -c "param18 = $param18" -c "param19 = $param19" -c "param20 = $param20" -c "param21 = $param21" -c "ptarget = $target" -c "calcErr = $calcErr" -c "strdef mistparam1" -c "mistparam1=\"$mistparam1\"" main_stim.hoc #>> $codefile # Set and run
+
+echo 'Simulation complete...'
+
+elapsed=$(( `date +%s` - tic )) # Find out elapsed time
+echo "runsim: done; elapsed time: $elapsed s." # | tee -a $codefile # Send elapsed time to display, and also save to sim file
