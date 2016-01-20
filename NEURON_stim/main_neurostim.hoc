@@ -126,13 +126,6 @@ proc setArmParams() {	// msarm variables
 	elExtGain = 1 // gain factor to multiply force of elbow extensor muscles (.osim parameter)
 	elFlexGain = 0.8 // gain factor to multiply force of elbox flexor muscles (.osim parameter)
 	 
-	/*damping = 4  // damping of muscles (.osim parameter)
-	shExtGain = 2.0  // gain factor to multiply force of shoulder extensor muscles (.osim parameter)
-	shFlexGain = 1.25 // gain factor to multiply force of shoulder flexor muscles (.osim parameter)
-	elExtGain = 1.0 // gain factor to multiply force of elbow extensor muscles (.osim parameter)
-	elFlexGain = 0.6 // gain factor to multiply force of elbox flexor muscles (.osim parameter)
-	*/
-	 
 	// muscle variables
 	vEMmax = param9 //60 // max num of spikes of output EM population (depends on mcmdspkwd) - used to calculate normalized muscle excitation (musExc) 
 	splitEM = 0 // whether to readout muscle excitations only from half of the EM population
@@ -193,8 +186,8 @@ proc setArmParams() {	// msarm variables
 
 proc loadSimFiles() {
 // Stuff run-neuron does.  (Comment out when using run-neuron.)
-xopen("/usr/site/nrniv/simctrl/hoc/setup.hoc")
-xopen("/usr/site/nrniv/simctrl/hoc/nrnoc.hoc")
+xopen("setup.hoc")
+xopen("nrnoc.hoc")
 load_file("init.hoc")
 // Load the "current sim" files.
 load_file("nqsnet.hoc")
@@ -209,27 +202,6 @@ load_file("msarm.hoc")
 /*load_file("saveweights.hoc")*/
 }
 
-////////////////////////////////////////////////
-// FUNCTION TO LOAD SIM FILES 
-///////////////////////////////////////////////
-
-proc loadSimFiles() {
-// Stuff run-neuron does.  (Comment out when using run-neuron.)
-xopen("/usr/site/nrniv/simctrl/hoc/setup.hoc")
-xopen("/usr/site/nrniv/simctrl/hoc/nrnoc.hoc")
-load_file("init.hoc")
-// Load the "current sim" files.
-load_file("nqsnet.hoc")
-load_file("network.hoc")
-load_file("params.hoc")
-load_file("stim.hoc")
-load_file("run.hoc")
-load_file("nload.hoc")
-load_file("basestdp.hoc")
-load_file("msarm.hoc")
-// Set up weight-saving code -- WARNING, requires plasticity to be on
-/*load_file("saveweights.hoc")*/
-}
 
 ////////////////////////////////////////////////
 // FUNCTIONS TO TRAIN AND TEST SIM
