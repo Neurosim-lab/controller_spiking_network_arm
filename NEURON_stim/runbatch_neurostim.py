@@ -172,7 +172,6 @@ for irepair in repair_range:
 							for param5 in param5_range:
 								# Loop over param6 vals
 								for param6 in param6_range:
-									# Loop over imparam1 vals
 									if (param5 > 0 and param6 > 0):# generate microstim
 										if probing == 1: # probing data with single cell stim (filename includes mist details)
 											outfilestem = 'stimdata/target-%d_ptype-%d_pperc-%d_cell-%d_start-%d_dur-%d_rate-%d' % \
@@ -186,7 +185,7 @@ for irepair in repair_range:
 											outfilestem = 'stimdata/target-%d_ptype-%d_pperc-%d_iseed-%d_start-%d_dur-%d_rate-%d' % \
 											(target, param1, param2, param3, param4, param5, param6)
 										elif probing == 0: # repair data (file name says 'repair')
-											outfilestem = 'stimdata/target-%d_ptype-%d_pperc-%d_%s_repair' % (target, param1, param2, imparam1, imparam2, irepair)				   
+											outfilestem = 'stimdata/target-%d_ptype-%d_pperc-%d_%s_repair' % (target, param1, param2, irepair)				   
 
 									# generate perturbations (saves data to file so can be read by sim)
 									# or copies over specific perturbation file previously selected
