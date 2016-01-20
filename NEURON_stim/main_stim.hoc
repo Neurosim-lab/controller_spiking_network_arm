@@ -1,0 +1,498 @@
+// MAIN.HOC
+// This is the key simulation file. Run this file to run the simulation.
+// Version: cliffk 9/18/12
+// modified: salvadord 9/05/13 (adapted to msarm sim)
+
+
+////////////////////////////////////////////////
+// FUNCTIONS TO SET SIM PARAMETERS 
+///////////////////////////////////////////////
+
+//* setSTDPparams ()
+proc setPlastParams() {
+	
+	ESESPlast = 1 // whether to have plasticity between ES -> ES cells
+	ESISPlast = 1 // whether to have plasticity between ES -> IS cells
+	ESEMPlast = 1 // whether to have plasticity between ES -> EM cells
+	EMEMPlast = 1 // whether to have plasticity between EM -> EM cells
+	EMIMPlast = 1 // whether to have plasticity between EM -> IM cell
+	EMESPlast = 1  // whether to have plasticity between EM -> ES cells
+
+	ESIMPlast = 0 // whether to have plasticity between ES -> IM cells
+	EMISPlast =0 // whether to have plasticity between EM -> IS cells
+
+	ISISPlast = 0 // whether to have plasticity between IS -> IS cells 
+	ISESPlast = 0 // whether to have plasticity between IS -> ES cells 
+	IMIMPlast = 0 // whether to have plasticity between IM -> IM cells 
+	IMEMPlast = 0 // whether to have plasticity between IM -> EM cells 
+
+	maxWscaling = param1 //0.8 // param1
+    learnRate = param2 //0.025//*param3 //param3
+	plastEEinc = learnRate // step increase in E->E plasticity during RL; original = 0.25
+	plastEIinc = learnRate
+	plastEEmaxw = param3 //6  * maxWscaling// max E->E weight
+	plastEImaxw = param4 //2.5 * maxWscaling
+	plastIEinc = learnRate 
+	plastIIinc = learnRate
+	plastIEmaxw = 3 * maxWscaling
+	plastIImaxw = 3 * maxWscaling
+	
+	DOPE_INTF6=1 // intf6 RL+STDP params
+	EDOPE_INTF6=1
+	IDOPE_INTF6=0
+	ESTDP_INTF6 = ISTDP_INTF6 = 0
+	FORWELIGTR_INTF6 = 1  // activate forward eligibility traces (post after pre)?
+	BACKELIGTR_INTF6 = 1 // activate backward eligibilty traces (pre after post)?
+	EXPELIGTR_INTF6 = 1   // use an exponential decay for the eligibility traces?
+	maxplastt_INTF6 = param5 //70 //rlDT + 50 // spike time difference over which to turn on eligibility
+	maxeligtrdur_INTF6 = param6 // 100//250 // maximum eligibilty trace duration (in ms)
+	mineligtrdur_INTF6 = param7 //50 // minimum eligibilty trace duration (in ms)
+}
+
+// setNetworkParams()
+proc setNetworkParams() {
+	//dvseed = 120456 //534023 // seed for wiring
+	scale = 4  // scaling factor for network size
+	
+	EEGain = 3 //population connection gains, original =2
+	EIGain = 5 //original= 8.5
+	IEGain = 3 
+	IIGain = 3
+	ELTSGain = 0.5
+	NMAMR = 0.1
+	EENMGain = 1
+	EIGainInterC0 = 0.125  // intercolumn gains
+	EIGainInterC1 = 1
+	EEGainInterC0 = 1
+	EEGainInterC1 = 0.25
+	DPESGain = 4 // *0.96// 11.89875, weight gain from DP -> ES cells
+
+	disinhib = 0 //iff==1 , turn off inhibition, by setting wmat[I%d][...]==0 in inhiboff()
+	pmatscale = 0.75*6.0/scale // scale for pmat - allows keeping it fixed while changing # of cells in network
+	wmatscale = 1 // scale for wmat - called after setwmat
+	DPESFeedForward = 0.1 // level of feedforward connectivity from DP -> ES
+	EMRecur = 0.05 // level of recurrence between EM cells
+	ESRecur = 0.05 //  level of recurrence between ES cells
+	EMESFeedBack = 0.01// level of feedback from EM -> ES
+	ESEMFeedForward = 0.3 //0.08// level of feedforward connectivity from ES -> EM
+	ESIMFeedForward = 0.05
+	EMISFeedBack = 0.0
+	ESEMGain = 1.0 // weight gain from ES -> EM cells
+	wirety = 4 // type of wiring to use, 0=fixed divergence, 1=swire, 2=swirecut, 3=swirecutfl, 4=fixed convergence (convwire)
+	// NB: wirty==4 (convwire) still has spatial wiring from DP -> ES
+
+	colside = 30 // column diameter in micrometers
+	layerzvar = 25 // range of z location of cells in a layer (in micrometers) - original val = 25!
+	checkers = 0 // whether to arrange cells in checkerboard pattern
+	cxinc = 3 // x increase for checker-like grid
+ 	cyinc = 3 // y increase for checker-like grid
+	crad = 1 // radius? for checker-like grid
+	gridpos = 0 // whether to arrange INTF6 cells on a 2D grid
+	DPgridpos = 0 // whether to arrange DP cells on a 2D grid
+	sepDPpos = 1 // whether to position DP cells in each group separately	
+	DPpad = 0 // whether to pad DP cells when they're separated
+	
+	maxsfall = 0.001 // max fall-off in prob of connection @ opposite side of column (used by swire)
+	slambda = colside/3 // spatial length constant for probability of connections, used in swirecut
+}
+
+// setStimParams()
+proc setStimParams() {
+	//inputseed = 1235//1234
+	mytstop= 1000 *1e3 // sets max duration of stim noise
+	noiseFactor=1
+	sgrhzEE = noiseFactor*200
+	sgrhzEI = noiseFactor*200
+	sgrhzII = noiseFactor*100
+	sgrhzIE = noiseFactor*100
+	sgrhzNM = 0
+	sgron = 1
+	sgrdel = 0 //poisson rates
+	sgrhzdel =0 //variance in sgrhz for an INTF6
+	EXGain = 15 // gain for poisson external inputs
+	EMWEXGain = 1.0
+	EMREXGain = 1.0 // gains for external inputs to EM (1st is for weights, 2nd for rates)
+	skipEXIS = 0 // whether to skip noise to IS,ISL cells
+	skipEXIM = 0 // whether to skip noise to IM,IML cells
+	skipEXES = 0 // whether to skip noise to ES cells
+	skipEXEM = 0 // whether to skip noise to EM cells
+}
+
+// setTimeParams()
+proc setArmParams() {	// msarm variables
+	damping = param8 // 5  // damping of muscles (.osim parameter)
+	shExtGain = 2  // gain factor to multiply force of shoulder extensor muscles (.osim parameter)
+	shFlexGain = 1 // gain factor to multiply force of shoulder flexor muscles (.osim parameter)
+	elExtGain = 1 // gain factor to multiply force of elbow extensor muscles (.osim parameter)
+	elFlexGain = 0.8 // gain factor to multiply force of elbox flexor muscles (.osim parameter)
+	 
+	/*damping = 4  // damping of muscles (.osim parameter)
+	shExtGain = 2.0  // gain factor to multiply force of shoulder extensor muscles (.osim parameter)
+	shFlexGain = 1.25 // gain factor to multiply force of shoulder flexor muscles (.osim parameter)
+	elExtGain = 1.0 // gain factor to multiply force of elbow extensor muscles (.osim parameter)
+	elFlexGain = 0.6 // gain factor to multiply force of elbox flexor muscles (.osim parameter)
+	*/
+	 
+	// muscle variables
+	vEMmax = param9 //60 // max num of spikes of output EM population (depends on mcmdspkwd) - used to calculate normalized muscle excitation (musExc) 
+	splitEM = 0 // whether to readout muscle excitations only from half of the EM population
+	minDPrate = 0.00001
+	maxDPrate = 100  // min and max firing rate of DP NSLOCs (tuned to different muscle lengths)
+	DPnoise = 0.0 // noise of NSLOC input to DP cells
+	DPoverlap = 1 //whether to have overlap in the encoding of muscle lengths (~population coding)
+
+	// time variables
+	aDT = 10 // how often to update the whole arm apparatus
+	amoveDT = 10 // how often to update the arm's position
+	mcmdspkwd = param10//80// param4 // 100  // motor command spike window; how wide to make the counting window (in ms)
+	EMlag = 50 // lag between EM commands (at neuromuscular junction) and arm update
+	spdDT = 10 // how often to update the muscle spindles (DP cells)
+	DPlag = 0 // lag between arm movement and DP update
+	rlDT = param11 //90//20 // how often to check RL status
+	  //muscleNoiseChangeDT = 500 // how often to alternate noise to muscle groups
+	iepoch = 0 // iterator for number of training epochs - global so can be used for random num generator
+	syDT = 0 // dt for recording synaptic weights into nqsy -- only used when syDT>0
+	
+	// learning variables
+	minRLerrchangeLTP = 0.001 // minimum error change visible to RL algorithm for LTP (units in Cartesian coordinates)
+	minRLerrchangeLTD = 0.001 // minimum error change visible to RL algorithm for LTD (units in Cartesian coordinates)
+	DoLearn = 4 // learning mode
+	DoReset = 2 // reset at beginning
+	DoRDM = 2  // use random targeqts for training
+	RLMode = 3  // reinforcement learning mode (0=none,1=reward,2=punishment,3=reward+punishment)
+	targid = 2  // target ID for target to set up
+	XYERR = 0 // whether to use cartesian error
+	ANGERR = 1 // whether to use diff btwn targ and arm angle for error 
+	TRAJERR = 2 // where to use dist to ideal trajectory as error
+	COMBERR = 0 // whether to use diff btwn targ and arm angle for error 
+	errTY = XYERR // type of error - either XYERR or ANGERR
+	centerOutTask = 1 // select target list
+	// declare("AdaptLearn",0) // whether to modulate learning level by distance from target
+
+	// recording/visualization variables
+	DoAnim = 0 //  animate arm
+	syCTYP = 1 // 1=only ES->EM ; 2 = all connections
+
+	// babble noise variables (related to stim params)
+	AdaptNoise = 0 // whether to adapt noise
+	LTDCount = 0 // number of recent LTD periods - used for noise adaptation
+	StuckCount = 2 // number of periods where arm doesn't improve and should adapt noise
+	EMNoiseRate = 250 //sgrhzEE) // rate of noise inputs to EM cells
+	EMNoiseRateInc = 100 // rate by which to increase noise rate when arm gets stuck
+	EMNoiseRateDec = 25 // rate by which to decrease noise rate when arm gets stuck
+	ResetEMNoiseRate = 0 // reset EMNoiseRate to sgrhzEE @ start of run ?
+	EMNoiseRateMax = 3e3 // rate of noise inputs to EM cells
+	EMNoiseRateMin = 50 // rate of noise inputs to EM cells
+	EMNoiseMuscleGroup = 0 // alternate muscle group (-1=no alternation; initial muscle: 0=shext; 1=shflex ; 2=elext; 3=elflex) 
+
+}
+
+////////////////////////////////////////////////
+// FUNCTION TO LOAD SIM FILES 
+///////////////////////////////////////////////
+
+proc loadSimFiles() {
+// Stuff run-neuron does.  (Comment out when using run-neuron.)
+xopen("/usr/site/nrniv/simctrl/hoc/setup.hoc")
+xopen("/usr/site/nrniv/simctrl/hoc/nrnoc.hoc")
+load_file("init.hoc")
+// Load the "current sim" files.
+load_file("nqsnet.hoc")
+load_file("network.hoc")
+load_file("params.hoc")
+load_file("stim.hoc")
+load_file("run.hoc")
+load_file("nload.hoc")
+load_file("basestdp.hoc")
+load_file("msarm.hoc")
+// Set up weight-saving code -- WARNING, requires plasticity to be on
+/*load_file("saveweights.hoc")*/
+}
+
+////////////////////////////////////////////////
+// FUNCTION TO LOAD SIM FILES 
+///////////////////////////////////////////////
+
+proc loadSimFiles() {
+// Stuff run-neuron does.  (Comment out when using run-neuron.)
+xopen("/usr/site/nrniv/simctrl/hoc/setup.hoc")
+xopen("/usr/site/nrniv/simctrl/hoc/nrnoc.hoc")
+load_file("init.hoc")
+// Load the "current sim" files.
+load_file("nqsnet.hoc")
+load_file("network.hoc")
+load_file("params.hoc")
+load_file("stim.hoc")
+load_file("run.hoc")
+load_file("nload.hoc")
+load_file("basestdp.hoc")
+load_file("msarm.hoc")
+// Set up weight-saving code -- WARNING, requires plasticity to be on
+/*load_file("saveweights.hoc")*/
+}
+
+////////////////////////////////////////////////
+// FUNCTIONS TO TRAIN AND TEST SIM
+///////////////////////////////////////////////
+
+//* train () -- sets training params, inits arm, runs sim and saves output
+proc train () { local i localobj xo 
+	//****************
+	// Train stage
+	//****************
+	
+	epochs = param21
+	// sim params
+	tstop=mytstop=htmax= 30 *1e3// sim time
+	syDT = 0 // dt for recording synaptic weights into nqsy -- only used when syDT>0
+	syCTYP = 2 // 1=only ES->EM ; 2 = all connections
+	 
+	 // set joint angles starting post
+	sAng0 = 0.62 // starting shoulder and elbow angles
+	sAng1= 1.53 //1.57
+	
+	// set target
+	targid = ptarget
+	
+	// set training params
+	DoLearn= 4 // learning mode
+	errTY = 0
+	COMBERR = param14
+	synScalingDT = param18 * 1000
+
+	// noise params
+	randomMuscleDTmax = param12//-1 // use random delays to alternate noise to muscle groups  (if -1 = use fixed muscleNoiseChangeDT)
+	EMNoiseRate=param16 //sgrhzEE) // rate of noise inputs to EM cells
+	EMNoiseMuscleGroup= 0 // alternate muscle group (-1=no alternation; initial muscle: 0=shext; 1=shflex ; 2=elext; 3=elflex)  -- expSeq
+	muscleNoiseChangeDT = 1000 // how often to alternate stim to different muscles 
+	exploreTot = param19//32//8 // length of exploratory sequence (pair of muscles coactivated; see expSeq)
+	AdaptNoise=0 // whether to adapt noise
+	StuckCount=2 // number of periods where arm doesn't improve and should adapt noise
+	EMNoiseRateInc=50 // rate by which to increase noise rate when arm gets stuck
+	EMNoiseRateDec=25 // rate by which to decrease noise rate when arm gets stuck
+	EMNoiseRateMax=3e3 // rate of noise inputs to EM cells
+	EMNoiseRateMin=50 // rate of noise inputs to EM cells
+	
+	// run sim
+	if (epochs > 0) {
+		for iepoch=0, epochs - 1 {
+			initBeforeRun()
+			run()    // Do the normal run.
+			tmp=afterRun()
+			packetLoss=packetLoss+tmp
+		}
+	} else {
+		initBeforeRun()
+		run()    // Do the normal run.
+		tmp=afterRun()
+		packetLoss=packetLoss+tmp
+	}
+	
+	
+  
+	// if syDT>0, record and plot all of the desired synaptic weights.
+	if(syDT) {
+		mkavgsyvst(nqsy)
+		// plotavgsyvst()
+	}
+
+	// Save results to disk
+	//type = 0
+	//load_file("saveoutput2.hoc") 
+}
+
+//* train2 () -- sets training params, inits arm, runs sim and saves output
+proc train2 () { local i localobj xo 
+	//****************
+	// Train stage
+	//****************
+	
+	epochs = param15
+	// sim params
+	tstop=mytstop=htmax= param17 *1e3 // sim time
+	syDT = 0 // dt for recording synaptic weights into nqsy -- only used when syDT>0
+	syCTYP = 2 // 1=only ES->EM ; 2 = all connections
+	 
+	 // set joint angles starting post
+	sAng0 = 0.62 // starting shoulder and elbow angles
+	sAng1= 1.53 //1.57
+	
+	// set target
+	targid = ptarget
+	
+	// set training params
+	DoLearn= 4 // learning mode
+	errTY = TRAJERR
+	COMBERR = param14 
+	
+	// noise params
+	EMNoiseRate=param20 //param4 //sgrhzEE) // rate of noise inputs to EM cells
+	EMNoiseMuscleGroup= -1 // alternate muscle group (-1=no alternation; initial muscle: 0=shext; 1=shflex ; 2=elext; 3=elflex)  -- expSeq
+	muscleNoiseChangeDT = 1500 // how often to alternate stim to different muscles 
+	exploreTot = 8 // length of exploratory sequence (pair of muscles coactivated; see expSeq)
+	AdaptNoise=0 // whether to adapt noise
+	StuckCount=2 // number of periods where arm doesn't improve and should adapt noise
+	EMNoiseRateInc=50 // rate by which to increase noise rate when arm gets stuck
+	EMNoiseRateDec=25 // rate by which to decrease noise rate when arm gets stuck
+	EMNoiseRateMax=3e3 // rate of noise inputs to EM cells
+	EMNoiseRateMin=50 // rate of noise inputs to EM cells
+	
+	// run sim
+	if (epochs > 0) {
+		for i=0, epochs - 1 {
+			//if (i==epochs - 1) {
+			//	syDT = 2000
+			//} 
+			initBeforeRun()
+			run()    // Do the normal run.
+			tmp=afterRun()
+			packetLoss=packetLoss+tmp
+		}
+
+	}
+
+  
+	// if syDT>0, record and plot all of the desired synaptic weights.
+	if(syDT) {
+		mkavgsyvst(nqsy)
+		 plotavgsyvst()
+	}
+
+	// save nqs weights to use later
+	if (calcErr == -3) {
+		print "SAVING PLASTICITY"
+		 saveplast(filestem)
+	}
+
+}
+
+ //* test ()  -- sets testing params, inits arm, runs sim and saves output
+proc test () {local i localobj xo
+	//****************
+	// Test stage
+	//****************
+	
+	// sim params
+	tstop=mytstop=htmax= 1 *1e3 // sim time
+	if (calcErr == -1) { // special case for iseeds sims to record LFPs and increase sim time
+		tstop=mytstop=htmax= 2 *1e3
+		wrecon() // to record LFPs
+	} else if (calcErr == -2) { // special case to record even longer sim time
+		tstop=mytstop=htmax= 5 *1e3
+	}
+	syDT = tstop // dt for recording synaptic weights into nqsy -- only used when syDT>0
+	syCTYP = 2 // 1=only ES->EM ; 2 = all connections
+	 
+	 // set joint angles starting post
+	sAng0 = 0.62 // starting shoulder and elbow angles
+	sAng1 = 1.53 //1.57
+
+	// set training params 
+	// learning params (learning turned off)
+	DoLearn= 0 // learning mode
+	
+	// noise params (reduced noise after training)
+	EMNoiseRate=param20//sgrhzEE) // rate of noise inputs to EM cells
+	EMNoiseMuscleGroup= -1 // alternate muscle group (-1=no alternation; initial muscle: 0=shext; 1=shflex ; 2=elext; 3=elflex) 
+	SetEMNoiseRate(EMNoiseRate) // just to test different EMNoise during testing
+	muscleNoiseChangeDT = 0 // how often to alternate stim to different muscles 
+	AdaptNoise=0 // whether to adapt noise
+	StuckCount=2 // number of periods where arm doesn't improve and should adapt noise
+	EMNoiseRateInc=50 // rate by which to increase noise rate when arm gets stuck
+	EMNoiseRateDec=25 // rate by which to decrease noise rate when arm gets stuck
+	EMNoiseRateMax=3e3 // rate of noise inputs to EM cells
+	EMNoiseRateMin=50 // rate of noise inputs to EM cells
+
+	// run sim
+	initBeforeRun()
+	run()    // Do the normal run.
+	if (calcErr == -1) {
+		print "saving muscle data..."
+		nrnpython("axf.saveEMG()")
+	}
+	tmp=afterRun()
+	packetLoss=packetLoss+tmp
+	// {iters=1 nl=8  nqiter2d=IterTest2D(iters,nl,tstop)} 
+	//addhyperrcols(nqiter2d) -- not working with msarm
+	
+	// Save results to disk
+	type = 1
+	load_file("saveoutput2.hoc") 
+
+	strdef tstr
+	nrnpython("import analysis as ana")
+	nrnpython("import analysis as ana")
+
+	// calculate err
+	if (calcErr == 1) {
+		if (packetLoss==0) { // if any packet has been lost, calculate error based only on first 20 ms == discard this set of sims
+			sprint(tstr,"ana.errorCenterOutTraj('%s',%d,%d)",filestem, 2, tstop/10)
+		} else {
+			sprint(tstr,"ana.errorCenterOutTraj('%s',%d,%d)",filestem, 2, 4)
+		}
+  		nrnpython(tstr) // save error of 4 trajs to file!!
+	}
+
+	// Generate mat file
+	sprint(tstr,"ana.save2MatlabMistSingle('%s',%d,%d)",filestem, 20, 1000)
+	nrnpython(tstr) 
+	// eg. save2MatlabMistSingle("data/14sep16b_mist_gen_86_cand_151/target-1_ptype-1_pperc-10_repair", 20, 1000)
+
+}
+
+// add external stimuliation (mist) to a subset of cells
+proc stim() {local i
+	// Random MiSt stimuli
+	userandommist=1
+	
+	mistWeight=10 // stimulus weight
+	mistSynapse=AM2 // Which synapsenapses to stimulate
+	
+	// filestem passed from runsim20params_mist and makestims.py called from rubatchpbs_mist_20params.py
+
+	// Load data file, add to stim variable, and run setshock()
+	load_file("stim.hoc") // load code to set netstims and netcons based on textfile parameter
+	
+}
+
+////////////////////////////////////////////////
+// MAIN CODE
+///////////////////////////////////////////////
+
+print "Loading main.hoc..."
+// set STDP, Network and Stim params
+setPlastParams()
+setNetworkParams()
+setStimParams()
+setArmParams()
+
+// load sim files
+loadSimFiles()
+
+print "dvseed: ", dvseed, "inputseed: ", inputseed
+
+declare("packetLoss",0)
+
+// load weights of trained network
+print "loading trained network..."
+loadWeightsPrincipe(mistparam1)
+
+// Set up external stimulation 
+print "setting up stim ..."
+stim()
+
+// Set up perturbation
+print "setting up perturbation ..."
+load_file("perturb.hoc")
+
+// Test
+print "Running the simulation (testing) ..."
+test()
+
+// Print netstim spikes
+// print "tvecMist: "
+// tvecMist.printf() 
+// print "idvecMist: " 
+// idvecMist.printf()
+
+print "main.hoc: done"
