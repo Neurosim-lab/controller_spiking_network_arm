@@ -132,7 +132,7 @@ else:
 	param4_range = [100]#[400] # mistStart
 	param5_range = [200]#[200] # mistDuration
 	param6_range = [250]#[250] # mistRate
-	repair_range = ['multi','both']; #['single', 'multi'];#, 
+	repair_range = ['both']; #['single', 'multi'];#, 
 
 selectCellPerturbs = [[2,2],[30,9]] 
 selectSynPerturbs = [[43,45],[8,34]] 
